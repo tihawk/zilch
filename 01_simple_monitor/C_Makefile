@@ -1,0 +1,43 @@
+# Variables
+CC = gcc
+LD = ld
+CFLAGS = -m16 -ffreestanding -c
+LDFLAGS = -Ttext 0x7C00 --oformat binary
+ASM = nasm
+QEMU = qemu-system-i386
+OBJCOPY = objcopy
+
+# Files
+SRC = monitor.c
+OBJ = monitor.o
+BIN = monitor.bin
+IMG = floppy.img
+
+# Default target
+all: $(IMG)
+
+# Compile the C source to a 16-bit object file
+$(OBJ): $(SRC)
+	$(CC) $(CFLAGS) $(SRC) -o $(OBJ)
+
+# Link the object file into a flat binary
+$(BIN): $(OBJ)
+	$(LD) $(LDFLAGS) $(OBJ) -o $(BIN)
+
+# Create a floppy image and write the binary to it
+$(IMG): $(BIN)
+	dd if=/dev/zero of=$(IMG) bs=512 count=2880
+	dd if=$(BIN) of=$(IMG) conv=notrunc
+	echo -ne '\x55\xAA' | dd of=$(IMG) bs=1 seek=510 conv=notrunc
+
+# Run the floppy image in QEMU
+run: $(IMG)
+	$(QEMU) -fda $(IMG)
+
+# Clean up generated files
+clean:
+	rm -f $(OBJ) $(BIN) $(IMG)
+
+# Phony targets
+.PHONY: all run clean
+
