@@ -1,9 +1,6 @@
 [BITS 16]
 [ORG 0x7C00] ; BIOS loads the boot sector here
 
-; Define variables
-program: times 32 db 0
-
 ; Main loop
 main:
     mov si, program ; Initialize pointer to the program array
@@ -40,7 +37,8 @@ getch:
     int 0x16
     ret
 
-; Boot sector signature
-times 510-($-$$) db 0
+; Reserve the remaining space on the boot sector for the program we input
+program: times 510-($-$$) db 0
+; Boot sector magic number
 dw 0xAA55
 
