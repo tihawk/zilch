@@ -3,9 +3,10 @@
 
 ; Main loop
 main:
-    call print_prompt
     mov si, program ; Initialize pointer to the program array
 input_loop:
+    call print_new_line
+    call print_prompt
     mov cx, 3 ; Read 3 digits
 read_input:
     ; Read a character from the keyboard
@@ -13,9 +14,23 @@ read_input:
 
     ; Handle 'm'
     cmp al, 'm'
-    jne handle_digit
+    jne handle_backspace
     call print_program
+    call print_new_line
+    call print_prompt
     jmp read_input
+
+    ; Handle backspace
+handle_backspace:
+    cmp al, 0x08
+    jne handle_digit
+    cmp cx, 3         ; Check if we are reading a brand new byte
+    jb .clear_byte
+    dec si
+.clear_byte:
+    mov byte [si], 0
+    call print_delete
+    jmp input_loop
 
 handle_digit:
     sub al, '0' ; Convert ASCII to numerical value
@@ -30,7 +45,6 @@ handle_digit:
     loop read_input
 
     ; Move to the next byte in the program array
-    call print_space
     inc si
     jmp input_loop
 
@@ -57,6 +71,14 @@ print_program:
     jmp .again
 .done:
     call print_new_line
+    pop si
+    ret
+
+print_delete:
+    push si
+    call print_new_line
+    mov si, del_cmd
+    call print_string
     pop si
     ret
 
@@ -138,6 +160,7 @@ getche:
 program_ptr: dw program        ; Current memoty address for cursor/input
 prompt: db '>', 0           ; Prompt symbol
 new_line: db 0x0A, 0x0D, 0
+del_cmd: db 'DEL', 0
 executing_msg: db 0xA,0xD,'Executing...',0xA,0xD,0
 program: times 510-($-$$) db 0
 ; Boot sector signature
