@@ -1,18 +1,26 @@
 # Variables
 ASM = nasm
+ASM_FLAGS = -f bin
 QEMU = qemu-system-i386
+OD = od
+OD_FLAGS = -A n -t o1 -v
 
 # Files
 SRC = monitor.asm
 BIN = monitor.bin
 IMG = floppy.img
+OCTAL_CODE = monitor.txt
 
 # Default target
-all: $(IMG)
+all: $(OCTAL_CODE)
 
 # Assemble the assembly code into a binary
 $(BIN): $(SRC)
-	$(ASM) -f bin -o $(BIN) $(SRC)
+	$(ASM) $(ASM_FLAGS) -o $(BIN) $(SRC)
+
+# Generate the octal code
+$(OCTAL_CODE): $(IMG)
+	$(OD) $(OD_FLAGS) $(BIN) > $(OCTAL_CODE)
 
 # Create a bootable floppy image
 $(IMG): $(BIN)
@@ -25,8 +33,7 @@ run: $(IMG)
 
 # Clean up generated files
 clean:
-	rm -f $(BIN) $(IMG)
+	rm -f $(BIN) $(IMG) $(OCTAL_CODE)
 
 # Phony targets
 .PHONY: all run clean
-
